@@ -22,28 +22,32 @@ const mintAddress = '0x0000000000000000000000000000000000000000';
 
 async function run() {
 
-    dclContract.events.Transfer().on('data', async function(event){
-        if (event.returnValues.from != mintAddress && event.returnValues.to == process.env.OCCULAND_WALLET) {
-            console.log(event.returnValues.from, 'just transfered', event.returnValues.tokenId, 'to our wallet!');
+    try {
+        dclContract.events.Transfer().on('data', async function(event){
+            if (event.returnValues.from != mintAddress && event.returnValues.to == process.env.OCCULAND_WALLET) {
+                console.log(event.returnValues.from, 'just transfered', event.returnValues.tokenId, 'to our wallet!');
 
-            const method = await occulandContract.methods.mint(event.returnValues.from, event.returnValues.tokenId);
+                const method = await occulandContract.methods.mint(event.returnValues.from, event.returnValues.tokenId);
 
-            const txn = {
-                from: process.env.MINTER_ADDRESS,
-                to: process.env.OCCULAND_WALLET,
-                gas: 1000000,
-                data: method.encodeABI(),
+                const txn = {
+                    from: process.env.MINTER_ADDRESS,
+                    to: process.env.OCCULAND_WALLET,
+                    gas: 1000000,
+                    data: method.encodeABI(),
+                }
+
+                try {
+                    const signedTxn = await web3Avax.eth.accounts.signTransaction(txn, process.env.MINTER_PRIVATE_KEY);
+                    await web3Avax.eth.sendSignedTransaction(signedTxn.rawTransaction).on('receipt', console.log);
+                } catch(e) {
+                    console.log('avax signing error');
+                }
             }
 
-            try {
-                const signedTxn = await web3Avax.eth.accounts.signTransaction(txn, process.env.MINTER_PRIVATE_KEY);
-                await web3Avax.eth.sendSignedTransaction(signedTxn.rawTransaction).on('receipt', console.log);
-            } catch(e) {
-                console.log('there has been an error')
-            }
-        }
-
-    });
+        });
+    } catch(e) {
+        console.log('listenining error')
+    }
 
     server.listen(PORT,() => {
         console.log(`Listening on port ${PORT} . . .`);
