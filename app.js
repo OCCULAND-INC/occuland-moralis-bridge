@@ -31,10 +31,11 @@ async function run() {
 
                 const txn = {
                     from: process.env.MINTER_ADDRESS,
-                    to: process.env.OCCULAND_WALLET,
+                    to: process.env.AVAX_OCCULAND_ADDRESS,
                     gas: 1000000,
                     data: method.encodeABI(),
                 }
+                console.log(txn);
 
                 try {
                     const signedTxn = await web3Avax.eth.accounts.signTransaction(txn, process.env.MINTER_PRIVATE_KEY);
