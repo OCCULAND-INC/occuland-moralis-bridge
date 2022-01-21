@@ -13,10 +13,10 @@ const web3Avax = new Web3(moralis);
 const PORT = process.env.PORT || 5000;
 
 const dclAbi =  JSON.parse(fs.readFileSync('./contracts/Land.json')).abi;
-const dclContract = new web3Eth.eth.Contract(dclAbi, process.env.CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000');
+const dclContract = new web3Eth.eth.Contract(dclAbi, process.env.CONTRACT_ADDRESS);
 
 const occulandAbi = JSON.parse(fs.readFileSync('./contracts/Occuland.json')).abi;
-const occulandContract = new web3Avax.eth.Contract(occulandAbi, process.env.AVAX_OCCULAND_ADDRESS || '0x0000000000000000000000000000000000000000');
+const occulandContract = new web3Avax.eth.Contract(occulandAbi, process.env.AVAX_OCCULAND_ADDRESS);
 
 const mintAddress = '0x0000000000000000000000000000000000000000';
 
@@ -39,9 +39,10 @@ async function run() {
                 const signedTxn = await web3Avax.eth.accounts.signTransaction(txn, process.env.MINTER_PRIVATE_KEY);
                 await web3Avax.eth.sendSignedTransaction(signedTxn.rawTransaction).on('receipt', console.log);
             } catch(e) {
-
+                console.log('there has been an error')
             }
         }
+
     });
 
     server.listen(PORT,() => {
