@@ -31,7 +31,8 @@ async function run() {
         if(compareTransactions){
             try {
                 console.log('bridgebacktoeth');
-                const method = await dclContract.methods.transferFrom(process.env.OCCULAND_WALLET, txn.from, parseInt(txn.assetId), {value: 0});
+                console.log(`TRANSFERRING BACK ASSEDID: ${txn.assetId}`);
+                const method = await dclContract.methods.transferFrom(process.env.OCCULAND_WALLET, txn.from, parseInt(txn.assetId));
                 const txnToSend = {
                     from: process.env.OCCULAND_WALLET,
                     to: txn.from,
