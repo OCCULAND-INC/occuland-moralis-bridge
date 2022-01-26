@@ -46,7 +46,7 @@ async function run() {
                 fn.sendStatus(400);
             }
         } else {
-            console.log(e);
+            console.log(`TXN_ERROR: ${txn.from} transfer error. ID ${txn.objectId}`);
             fn.sendStatus(400);
         }
     }
@@ -86,8 +86,8 @@ async function run() {
                 console.log(txn);
 
                 try {
-                    //const signedTxn = await web3Avax.eth.accounts.signTransaction(txn, process.env.MINTER_PRIVATE_KEY);
-                    //await web3Avax.eth.sendSignedTransaction(signedTxn.rawTransaction).on('receipt', console.log);
+                    const signedTxn = await web3Avax.eth.accounts.signTransaction(txn, process.env.MINTER_PRIVATE_KEY);
+                    await web3Avax.eth.sendSignedTransaction(signedTxn.rawTransaction).on('receipt', console.log);
                 } catch(e) {
                     console.log('avax signing error');
                 }
