@@ -31,14 +31,15 @@ async function run() {
         if(compareTransactions){
             try {
                 console.log('bridgebacktoeth');
-                console.log(txn);
-                const method = await dclContract.methods.transferFrom(process.env.OCCULAND_WALLET, txn.from, parseInt(txn.assetId));
+                const method = await dclContract.methods.transferFrom(process.env.OCCULAND_WALLET, txn.from, parseInt(txn.assetId), {value: 0});
                 const txnToSend = {
                     from: process.env.OCCULAND_WALLET,
                     to: txn.from,
                     gas: 1000000,
                     data: method.encodeABI(),
                 }
+
+                console.log(txnToSend)
     
                 const signedTxn = await web3Eth.eth.accounts.signTransaction(txnToSend, process.env.MINTER_PRIVATE_KEY);
                 await web3Eth.eth.sendSignedTransaction(signedTxn.rawTransaction).on('receipt', console.log);
@@ -105,14 +106,14 @@ async function run() {
     }
 
     app.get('/', async (req, res) =>  {
-        let x = req.body;
         res.send("app is running . . .");
     });
 
     app.post('/KGGpWFQm6gQEnrEGbw1a1WBOfotDrvGjG6rhcg9G', async (req, res) =>  {
         let x = req.body;
         bridgeAssetBackToEth(x.object);
-        res.statusCode(200);
+        res.statusCode = 200;
+        res.send();
     });
 
     app.post('/rentto/et8dtUHR8G3TXOFeTkfZhSmGcwRg660DrKsCU266', async (req, res) =>  {
