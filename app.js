@@ -75,7 +75,11 @@ async function run() {
             if (event.returnValues.from != mintAddress && event.returnValues.to == process.env.OCCULAND_WALLET) {
                 console.log(event.returnValues.from, 'just transfered', event.returnValues.tokenId, 'to our wallet!');
 
-                const method = await occulandContract.methods.mint(event.returnValues.from, event.returnValues.tokenId);
+                const method = await occulandContract.methods.mint(
+                    event.returnValues.from, 
+                    event.returnValues.tokenId,
+                    'fakeURI'
+                );
 
                 const txn = {
                     from: process.env.MINTER_ADDRESS,
