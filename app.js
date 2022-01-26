@@ -27,12 +27,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
 async function run() {
-    const bridgeAssetBackToEth = async (fn, txn) => {
+    const bridgeAssetBackToEth = async (txn) => {
         if(compareTransactions){
             try {
                 console.log('bridgebacktoeth');
                 console.log(txn);
-                const method = await dclContract.methods.transferFrom(process.env.OCCULAND_WALLET, txn.from, txn.assetId);
+                const method = await dclContract.methods.transferFrom(process.env.OCCULAND_WALLET, txn.from, parseInt(txn.assetId));
                 const txnToSend = {
                     from: process.env.OCCULAND_WALLET,
                     to: txn.from,
@@ -42,14 +42,14 @@ async function run() {
     
                 const signedTxn = await web3Eth.eth.accounts.signTransaction(txnToSend, process.env.MINTER_PRIVATE_KEY);
                 await web3Eth.eth.sendSignedTransaction(signedTxn.rawTransaction).on('receipt', console.log);
-                fn.sendStatus(200);
+                //fn.sendStatus(200);
             } catch(e) {
                 console.log(`TXN_ERROR: ${txn.from} transfer error. ID ${txn.objectId}`);
-                fn.sendStatus(400);
+                //fn.sendStatus(400);
             }
         } else {
             console.log(`TXN_ERROR: ${txn.from} transfer error. ID ${txn.objectId}`);
-            fn.sendStatus(400);
+            //fn.sendStatus(400);
         }
     }
     
@@ -111,7 +111,8 @@ async function run() {
 
     app.post('/KGGpWFQm6gQEnrEGbw1a1WBOfotDrvGjG6rhcg9G', async (req, res) =>  {
         let x = req.body;
-        bridgeAssetBackToEth(res, x.object);
+        bridgeAssetBackToEth(x.object);
+        res.statusCode(200);
     });
 
     app.post('/rentto/et8dtUHR8G3TXOFeTkfZhSmGcwRg660DrKsCU266', async (req, res) =>  {
