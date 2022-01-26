@@ -9,6 +9,11 @@ const Web3 = require('web3');
 
 const infura = process.env.INFURA_API_KEY;  
 const web3Eth = new Web3(infura);
+
+
+const web3EthHttps = new Web3(process.env.MORALIS_ETH_API_KEY);
+
+
 const moralis = process.env.MORALIS_API_KEY;
 const web3Avax = new Web3(moralis);
 
@@ -16,6 +21,9 @@ const PORT = process.env.PORT || 5000;
 
 const dclAbi =  JSON.parse(fs.readFileSync('./contracts/Land.json')).abi;
 const dclContract = new web3Eth.eth.Contract(dclAbi, process.env.CONTRACT_ADDRESS);
+
+
+const dclContractHttp = new web3EthHttps.eth.Contract(dclAbi, process.env.CONTRACT_ADDRESS);
 
 const occulandAbi = JSON.parse(fs.readFileSync('./contracts/Occuland.json')).abi;
 const occulandContract = new web3Avax.eth.Contract(occulandAbi, process.env.AVAX_OCCULAND_ADDRESS);
@@ -30,20 +38,25 @@ async function run() {
     const bridgeAssetBackToEth = async (txn) => {
         if(compareTransactions){
             try {
-                console.log('bridgebacktoeth');
+                console.log(txn);
                 console.log(`TRANSFERRING BACK ASSEDID: ${txn.assetId}`);
-                const method = await dclContract.methods.transferFrom(process.env.OCCULAND_WALLET, txn.from, parseInt(txn.assetId));
+                const mth = await dclContractHttp.methods.transferFrom(
+                    process.env.OCCULAND_WALLET, 
+                    txn.from, 
+                    parseInt(txn.assetId)
+                );
+
                 const txnToSend = {
                     from: process.env.OCCULAND_WALLET,
                     to: txn.from,
                     gas: 1000000,
-                    data: method.encodeABI(),
+                    data: mth.encodeABI(),
                 }
 
                 console.log(txnToSend)
     
-                const signedTxn = await web3Eth.eth.accounts.signTransaction(txnToSend, process.env.MINTER_PRIVATE_KEY);
-                await web3Eth.eth.sendSignedTransaction(signedTxn.rawTransaction).on('receipt', console.log);
+                const signedTxn = await web3EthHttps.eth.accounts.signTransaction(txnToSend, process.env.MINTER_PRIVATE_KEY);
+                await web3EthHttps.eth.sendSignedTransaction(signedTxn.rawTransaction).on('receipt', console.log);
                 //fn.sendStatus(200);
             } catch(e) {
                 console.log(`TXN_ERROR: ${txn.from} transfer error. ID ${txn.objectId}`);
