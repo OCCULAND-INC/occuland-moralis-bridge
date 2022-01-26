@@ -30,6 +30,8 @@ async function run() {
     const bridgeAssetBackToEth = async (fn, txn) => {
         if(compareTransactions){
             try {
+                console.log('bridgebacktoeth');
+                console.log(txn);
                 const method = await dclContract.methods.transferFrom(process.env.OCCULAND_WALLET, txn.from, txn.assetId);
                 const txnToSend = {
                     from: process.env.OCCULAND_WALLET,
