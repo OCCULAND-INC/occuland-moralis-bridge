@@ -1,4 +1,8 @@
 require("dotenv").config();
+
+const NFTStorage = require('nft.storage');
+const File = require('nft.storage');
+const client = new NFTStorage.NFTStorage({ token: process.env.NFTStorage })
 const fs = require('fs');
 const app = require('express')();
 const bodyParser = require('body-parser');
@@ -37,6 +41,26 @@ app.use(bodyParser.urlencoded({extended:true}));
 
 //qs: {where: `{"token_id": "${token_id}", "confirmed": true, "from_address": "${address_from}", "transaction_hash": "${hash}"}`},
 async function run() {
+
+    const createURI = async (
+        _platform,
+        _assetId,
+        _txnHash,
+        _owner
+    ) => {
+        const metadata = await client.store({
+            name: 'Occuland LAND IOU',
+            description: 'This token represents a claim to the asset entrusted to Occuland. The details herein is that of the asset and its transfer.',
+            image: new File.File([],'none.jpg',{ type: 'image/jpg' }),
+            asset:{
+                platform: _platform,
+                asset_id: _assetId,
+                transaction_hash: _txnHash,
+                owner: _owner,
+            }
+        });
+        return metadata.url;
+    }
     const fetchStatsOfTransfer = async (address_from, token_id, hash, cb) => {
         let url = `https://cdh7zfwna37q.usemoralis.com:2053/server/classes/EthNFTTransfers?where=%7B%22token_id%22%3A%22${token_id}%22,%20%22from_address%22%3A%22${address_from}%22,%20%22transaction_hash%22%3A%22${hash}%22,%20%22confirmed%22%3Atrue%7D`;
         let options = {
@@ -64,11 +88,18 @@ async function run() {
                 console.log(`Transferred in asset id: ${txn.token_id}`);
                 //console.log(txn);
                 const nonce = await web3Avax.eth.getTransactionCount(process.env.MINTER_ADDRESS, 'latest');
+
+                let URI = await createURI(
+                    "Decentraland",
+                    txn.token_id,
+                    txn.transaction_hash,
+                    txn.from_address
+                );
                 
                 const mth = await occulandContract.methods.mint(
                     txn.from_address,
                     txn.token_id,
-                    'fakeURI'
+                    URI
                 );
 
                 const txnToSend = {
