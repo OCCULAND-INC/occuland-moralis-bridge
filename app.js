@@ -3,13 +3,14 @@ const fs = require('fs');
 const app = require('express')();
 const bodyParser = require('body-parser');
 const server = require('http').Server(app);
+const fetch = require('node-fetch');
+const querystring = require('querystring');
 var cors = require('cors');
 const Web3 = require('web3');
-
+const res = require("express/lib/response");
 
 const infura = process.env.INFURA_API_KEY;  
 const web3Eth = new Web3(infura);
-
 
 const web3EthHttps = new Web3(process.env.MORALIS_ETH_API_KEY);
 
@@ -33,7 +34,23 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
+
+//qs: {where: `{"token_id": "${token_id}", "confirmed": true, "from_address": "${address_from}", "transaction_hash": "${hash}"}`},
 async function run() {
+    const fetchStatsOfTransfer = async (address_from, token_id, hash, cb) => {
+        let url = `https://cdh7zfwna37q.usemoralis.com:2053/server/classes/EthNFTTransfers?where=%7B%22token_id%22%3A%22${token_id}%22,%20%22from_address%22%3A%22${address_from}%22,%20%22transaction_hash%22%3A%22${hash}%22,%20%22confirmed%22%3Atrue%7D`;
+        let options = {
+          method: 'GET',
+          headers: {
+            'x-parse-application-id': 'V00aPRpd4SM8R96PbFVOLt1AMHQqLjFXkmH3Qax0',
+            'x-parse-rest-api-key': 'y1BnljX3CcEDZg0'
+          }
+        };
+        await fetch(url, options)
+          .then(res => cb(res))
+          .catch(err => console.error('error:' + err)); 
+
+    }
     const bridgeAssetToAvax = async (txn) => {
         let comp = await compareTransactions(txn, web3EthHttps, process.env.CONTRACT_ADDRESS, txn.from_address);
         if(
@@ -129,46 +146,31 @@ async function run() {
             return false;
         }
     }
-    
-    const getTransction = async (txn_hash) => {
-        let response = await web3Avax.eth.getTransaction(txn_hash);
-        return response;
-    }
-
-    /*try {
-        dclContract.events.Transfer().on('data', async function(event){
-            if (event.returnValues.from != mintAddress && event.returnValues.to == process.env.OCCULAND_WALLET) {
-                console.log(event.returnValues.from, 'just transfered', event.returnValues.tokenId, 'to our wallet!');
-
-                const method = await occulandContract.methods.mint(
-                    event.returnValues.from, 
-                    event.returnValues.tokenId,
-                    'fakeURI'
-                );
-
-                const txn = {
-                    from: process.env.MINTER_ADDRESS,
-                    to: process.env.AVAX_OCCULAND_ADDRESS,
-                    gas: 1000000,
-                    data: method.encodeABI(),
-                }
-                console.log(txn);
-
-                try {
-                    //const signedTxn = await web3Avax.eth.accounts.signTransaction(txn, process.env.MINTER_PRIVATE_KEY);
-                    //await web3Avax.eth.sendSignedTransaction(signedTxn.rawTransaction).on('receipt', console.log);
-                } catch(e) {
-                    console.log('avax signing error');
-                }
-            }
-
-        });
-    } catch(e) {
-        console.log('listenining error')
-    }*/
 
     app.get('/', async (req, res) =>  {
         res.send("app is running . . .");
+    });
+
+    app.get('/status', async (req, response) =>  {
+        let address = req.query['/address'] || req.query.address ;
+        let assetId = req.query.assetId;
+        let hash = req.query.hash;
+        let address2 = address.toLowerCase();
+        console.log(`checking status: ${hash} assetId: ${assetId} address: ${address2}`)
+        await fetchStatsOfTransfer(
+            address2,
+            assetId, 
+            hash,
+            async (res) => {
+                let x = await res.json();
+                if(x.results.length > 0){
+                    console.log(x.results[0].confirmed);
+                    response.send('confirmed');
+                } else {
+                    response.send('pending');
+                }
+            }
+        );
     });
 
     app.post('/transferout/tTyuQAMoj9TsbZAT7Ie8PTgWdbxILlnKKmN10xfC', async (req, res) =>  {
